@@ -1,0 +1,62 @@
+#!/bin/bash
+
+set -e
+
+CONFIG_DIR="$(pwd)/config"
+CUSTOM_COMPONENTS_DIR="$(pwd)/custom_components"
+CONTAINER_NAME="home-assistant-dev"
+
+# Helper: Check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# 1. Check for Docker
+if ! command_exists docker; then
+    echo "❌ Docker is not installed or not in your PATH."
+    exit 1
+fi
+
+# 2. Check if Docker is running
+if ! docker info >/dev/null 2>&1; then
+    echo "❌ Docker daemon is not running or not responding."
+
+    # 3. If using Colima, suggest starting it
+    if command_exists colima; then
+        echo "🔍 Colima is installed. Trying to start Colima..."
+        colima start
+
+        echo "⏳ Waiting for Colima to start..."
+        sleep 5
+
+        if ! docker info >/dev/null 2>&1; then
+            echo "❌ Docker still not responding after starting Colima."
+            exit 1
+        else
+            echo "✅ Colima started and Docker is now responsive."
+        fi
+    else
+        echo "💡 Tip: If you're on macOS/Linux and using Colima, try running: colima start"
+        exit 1
+    fi
+fi
+
+# 4. Check configuration.yaml presence
+if [ ! -f "$CONFIG_DIR/configuration.yaml" ]; then
+    echo "❌ configuration.yaml not found in ./config/"
+    exit 1
+fi
+
+# 5. Start Home Assistant
+echo "🚀 Starting Home Assistant in Docker..."
+
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  --restart=unless-stopped \
+  -v "$CONFIG_DIR":/config \
+  -v "$CUSTOM_COMPONENTS_DIR":/config/custom_components \
+  -e TZ=Europe/Vienna \
+  -p 8123:8123 \
+  ghcr.io/home-assistant/home-assistant:stable
+
+echo "✅ Home Assistant is starting at http://localhost:8123"

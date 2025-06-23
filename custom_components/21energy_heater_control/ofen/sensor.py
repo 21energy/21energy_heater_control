@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass, SensorStateClass
-from homeassistant.const import (
-    UnitOfTemperature,
-    UnitOfPower,
-    REVOLUTIONS_PER_MINUTE
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorDeviceClass,
+    SensorStateClass,
 )
+from homeassistant.const import UnitOfTemperature, UnitOfPower
 from ..entity import HeaterControlEntity
 from ..const import DOMAIN
 
@@ -157,8 +158,12 @@ class HeaterControlSensor(HeaterControlEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_translation_key = self.entity_description.key
-        self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.device}_{self.entity_description.key}"
+        )
+        self.entity_id = (
+            f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> str | None:

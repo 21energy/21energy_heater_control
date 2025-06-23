@@ -1,4 +1,5 @@
 """Config flow for 21energy_heater_control integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,18 +7,19 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (DOMAIN, CONF_POLLING_INTERVAL, LOGGER)
+from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 from .api import HeaterControlApiClient
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): str,
-    vol.Required(CONF_POLLING_INTERVAL, default=60): int,
-    })
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_POLLING_INTERVAL, default=60): int,
+    }
+)
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -25,7 +27,8 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate there is an invalid hostname."""
-    
+
+
 # This is the schema that used to display the UI to the user. This simple
 # schema has a single required host field, but it could include a number of fields
 # such as username, password etc. See other components in the HA core code for
@@ -37,6 +40,7 @@ class InvalidHost(exceptions.HomeAssistantError):
 # quite work as documented and always gave me the "Lokalise key references" string
 # (in square brackets), rather than the actual translated value. I did not attempt to
 # figure this out or look further into it.
+
 
 class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for 21energy_heater_control."""
@@ -53,7 +57,9 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._interval: int | None = None
 
-    async def _async_step_user_base(self, user_input: dict[str, Any] | None = None, error: str | None = None) -> ConfigFlowResult:
+    async def _async_step_user_base(
+        self, user_input: dict[str, Any] | None = None, error: str | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         info = {}
@@ -67,7 +73,9 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._validate_and_setup()
 
                 if not info["is_paired"]:
-                    errors["base"] = "Your device is not paired! Please first pair your device through the 21energy app on your phone."
+                    errors["base"] = (
+                        "Your device is not paired! Please first pair your device through the 21energy app on your phone."
+                    )
 
                 elif "device" in info:
                     await self.async_set_unique_id(info["device"])
@@ -76,7 +84,9 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["model"] = info["model"]
                     user_input["version"] = info["version"]
                     user_input["pool_username"] = info["pool_username"]
-                return self.async_create_entry(title=f"{info["model"]} ({info["device"]})", data=user_input)
+                return self.async_create_entry(
+                    title=f"{info['model']} ({info['device']})", data=user_input
+                )
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -86,11 +96,13 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
-        return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self._async_step_user_base(user_input=user_input)
 
@@ -101,9 +113,7 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Validate the data can be used to set up a connection.
 
         if len(self._host) < 3:
-            LOGGER.exception(
-                "Invalid hostname %s!", self._host
-            )
+            LOGGER.exception("Invalid hostname %s!", self._host)
             raise InvalidHost
 
         client = HeaterControlApiClient(
@@ -114,11 +124,8 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not await client.async_get_status():
             # If there is an error, raise an exception to notify HA that there was a
             # problem. The UI will also show there was a problem
-            LOGGER.exception(
-                "Could not connect to %s!", self._host
-            )
+            LOGGER.exception("Could not connect to %s!", self._host)
             raise CannotConnect
         else:
             result = await client.async_get_device()
         return result
-

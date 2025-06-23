@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorDeviceClass, BinarySensorEntityDescription
-from homeassistant.const import (
-    REVOLUTIONS_PER_MINUTE
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
 )
 from ..entity import HeaterControlEntity
 from ..const import DOMAIN
@@ -61,8 +62,12 @@ class HeaterControlBinarySensor(HeaterControlEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_translation_key = self.entity_description.key
-        self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.device}_{self.entity_description.key}"
+        )
+        self.entity_id = (
+            f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        )
 
     @property
     def is_on(self) -> bool | None:

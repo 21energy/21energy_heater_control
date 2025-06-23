@@ -10,10 +10,6 @@ from ..entity import HeaterControlEntity
 
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import (
-    REVOLUTIONS_PER_MINUTE
-)
-import asyncio
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -22,9 +18,11 @@ if TYPE_CHECKING:
     from ..coordinator import HeaterControlDataUpdateCoordinator
     from ..data import HeaterControlConfigEntry
 
+
 @dataclass(frozen=True)
 class ExtSwitchEntityDescription(SwitchEntityDescription):
     icon_off: str | None = None
+
 
 ENTITY_DESCRIPTIONS = (
     ExtSwitchEntityDescription(
@@ -34,6 +32,7 @@ ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=True,
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
@@ -62,14 +61,20 @@ class HeaterControlSwitch(HeaterControlEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_translation_key = self.entity_description.key
-        self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.device}_{self.entity_description.key}"
+        )
+        self.entity_id = (
+            f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        )
         self._attr_icon_off = self.entity_description.icon_off
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
         try:
-            await self.coordinator.async_set_device_enable(self.entity_description.key, True)
+            await self.coordinator.async_set_device_enable(
+                self.entity_description.key, True
+            )
             self.async_write_ha_state()
         except ValueError:
             return "unavailable"
@@ -77,7 +82,9 @@ class HeaterControlSwitch(HeaterControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
         try:
-            await self.coordinator.async_set_device_enable(self.entity_description.key, False)
+            await self.coordinator.async_set_device_enable(
+                self.entity_description.key, False
+            )
             self.async_write_ha_state()
         except ValueError:
             return "unavailable"

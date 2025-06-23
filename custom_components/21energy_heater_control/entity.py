@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.const import CONF_HOST
 
 from .coordinator import HeaterControlDataUpdateCoordinator
+
 
 class HeaterControlEntity(CoordinatorEntity[HeaterControlDataUpdateCoordinator]):
     """HeaterControlEntity class."""

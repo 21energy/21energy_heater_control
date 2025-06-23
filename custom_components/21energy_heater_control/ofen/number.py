@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 
 from ..entity import HeaterControlEntity
 from ..const import DOMAIN, LOGGER
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +35,7 @@ ENTITY_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, 
+    hass: HomeAssistant,
     entry: HeaterControlConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -57,28 +62,36 @@ class HeaterControlNumber(HeaterControlEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_translation_key = self.entity_description.key
-        self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.device}_{self.entity_description.key}"
+        )
+        self.entity_id = (
+            f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> float | None:
         """Return the native value of the number."""
         return self.coordinator.data.get(self.entity_description.key)
-    
+
     @property
     def available(self) -> bool:
         """Return the availability."""
         if self.coordinator.device_is_running:
             return self.coordinator.last_update_success
         return False
-    
+
     async def async_set_native_value(self, value: float) -> None:
         try:
-            LOGGER.debug(f"async_set_native_value => {self.entity_description.key}:{value}")
+            LOGGER.debug(
+                f"async_set_native_value => {self.entity_description.key}:{value}"
+            )
 
-            if self.entity_description.key == 'powertarget':
+            if self.entity_description.key == "powertarget":
                 value = int(round(value))
-                await self.coordinator.entry.runtime_data.client.async_set_powerTarget(value)
+                await self.coordinator.entry.runtime_data.client.async_set_powerTarget(
+                    value
+                )
 
             await self.coordinator.async_refresh()
             return self.coordinator.data.get(self.entity_description.key)

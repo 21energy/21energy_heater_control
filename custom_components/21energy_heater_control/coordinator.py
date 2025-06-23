@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
-from datetime import timedelta
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.const import CONF_HOST
 
 from .api import (
     HeaterControlApiClientAuthenticationError,
@@ -26,12 +24,21 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
     entry: HeaterControlConfigEntry
-    
-    def __init__(self, hass: HomeAssistant, entry: HeaterControlConfigEntry, logger, name, update_interval):
-        self.entry=entry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HeaterControlConfigEntry,
+        logger,
+        name,
+        update_interval,
+    ):
+        self.entry = entry
         self.device = entry.data["device"]
-        super().__init__(hass, logger=logger, name=name, update_interval=update_interval)
-    
+        super().__init__(
+            hass, logger=logger, name=name, update_interval=update_interval
+        )
+
     @property
     def device_is_running(self) -> bool:
         """Return the availability."""
@@ -44,7 +51,7 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
     def device_info(self):
         return DeviceInfo(
             identifiers={(DOMAIN, self.entry.data["product_id"])},
-            name=f"{MANUFACTURER} {self.entry.data["model"]}",
+            name=f"{MANUFACTURER} {self.entry.data['model']}",
             manufacturer=MANUFACTURER,
             model=self.entry.data["model"],
             sw_version=self.entry.data["version"],
