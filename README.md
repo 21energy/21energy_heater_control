@@ -5,7 +5,7 @@
 ![logo](https://github.com/21energy/21home_assistant/raw/main/logo.png)
 
 This Home Assistant integration is providing information and functions to control devices from 21energy GmbH. This runs
-fully local and does not rely on external 21energy infrastructure.
+fully locally and does not rely on external 21energy infrastructure.
 
 ## This component will set up the following platforms
 
@@ -48,7 +48,7 @@ step_):
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=21energy_heater_control)
 
-#### Option 2: Manually steps by step
+#### Option 2: Manually step by step
 
 Use the following steps for a manual configuration by adding the custom integration using the web interface and follow
 instruction on screen:
@@ -58,7 +58,7 @@ instruction on screen:
 
 #### General additional notes
 
-Please note, that some of the available sensors are __not__ enabled by default.
+Please note that some of the available sensors are __not__ enabled by default.
 
 ## Feedback and improvements
 
