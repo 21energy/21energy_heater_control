@@ -1,7 +1,12 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 set -e
 
-cd "$(dirname "$0")/.."
+echo "🔧 Creating virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
 
-python3 -m pip install --requirement requirements.txt
+echo "⬆️  Upgrading pip and installing Home Assistant..."
+pip install --upgrade pip wheel
+pip install homeassistant
+
+echo "✅ Setup complete. You can now run ./start.sh"

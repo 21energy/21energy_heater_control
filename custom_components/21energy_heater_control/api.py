@@ -27,6 +27,11 @@ class HeaterControlApiClientAuthenticationError(
 ):
     """Exception to indicate an authentication error."""
 
+class HeaterControlApiClientOutdatedError(
+    HeaterControlApiClientError,
+):
+    """Exception to indicate that an expected endpoint is not available. Most likely due to the ofen being outdated."""
+
 
 def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     """Verify that the response is valid."""
@@ -35,6 +40,8 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
         raise HeaterControlApiClientAuthenticationError(
             msg,
         )
+    elif response.status == 404:
+        raise HeaterControlApiClientOutdatedError()
     response.raise_for_status()
 
 
@@ -219,6 +226,8 @@ class HeaterControlApiClient:
             raise HeaterControlApiClientCommunicationError(
                 msg,
             ) from exception
+        except HeaterControlApiClientError as e:
+            raise e
         except Exception as exception:  # pylint: disable=broad-except
             msg = f"Something really wrong happened! - {exception}"
             raise HeaterControlApiClientError(

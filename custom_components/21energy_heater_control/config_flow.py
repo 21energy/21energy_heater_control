@@ -11,12 +11,12 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
-from .api import HeaterControlApiClient
+from .api import HeaterControlApiClient, HeaterControlApiClientOutdatedError
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_POLLING_INTERVAL, default=60): int,
+        vol.Required(CONF_POLLING_INTERVAL, default=30): int,
     }
 )
 
@@ -62,7 +62,6 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        info = {}
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._interval = user_input[CONF_POLLING_INTERVAL]
@@ -73,10 +72,7 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._validate_and_setup()
 
                 if not info["is_paired"]:
-                    errors["base"] = (
-                        "Your device is not paired! Please first pair your device through the 21energy app on your phone."
-                    )
-
+                    errors["base"] = "unpaired"
                 elif "device" in info:
                     await self.async_set_unique_id(info["device"])
                     self._abort_if_unique_id_configured(updates=user_input)
@@ -92,8 +88,10 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidHost:
                 errors["host"] = "cannot_connect"
-            except Exception:
-                LOGGER.exception("Unexpected exception")
+            except HeaterControlApiClientOutdatedError:
+                errors["base"] = "outdated"
+            except Exception as e:
+                LOGGER.exception(f"Unexpected exception: {e}")
                 errors["base"] = "unknown"
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
