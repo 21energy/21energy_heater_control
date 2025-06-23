@@ -5,7 +5,7 @@
 ![logo](https://github.com/21energy/21home_assistant/raw/main/logo.png)
 
 This Home Assistant integration is providing information and functions to control devices from 21energy GmbH. This runs
-fully local and does not rely on external 21energy infrastructure
+fully local and does not rely on external 21energy infrastructure.
 
 ## This component will set up the following platforms
 
