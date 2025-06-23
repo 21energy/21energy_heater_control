@@ -43,12 +43,12 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_info(self):
         return DeviceInfo(
-            identifiers={(DOMAIN, self.entry.data["device"])},
+            identifiers={(DOMAIN, self.entry.data["product_id"])},
             name=f"{MANUFACTURER} {self.entry.data["model"]}",
             manufacturer=MANUFACTURER,
             model=self.entry.data["model"],
-            sw_version=self.entry.data["app_version"],
-            serial_number=self.entry.data["device"],
+            sw_version=self.entry.data["version"],
+            serial_number=self.entry.data["product_id"],
         )
 
     async def async_set_device_enable(self, key: str, value: bool) -> Any:

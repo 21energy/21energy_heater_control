@@ -15,6 +15,9 @@ class HeaterControlEntity(CoordinatorEntity[HeaterControlDataUpdateCoordinator])
     def __init__(self, coordinator: HeaterControlDataUpdateCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        #self._attr_unique_id = coordinator.entry.entry_id
-        self._attr_device_info = self.coordinator.device_info
+        self._attr_unique_id = coordinator.entry.entry_id
         self._attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> dict:
+        return self.coordinator.device_info

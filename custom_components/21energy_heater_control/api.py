@@ -60,6 +60,7 @@ class HeaterControlApiClient:
         data["powertarget_watt"] = str(await self._async_get_value("heater/powerTarget/watt")).replace("W","")
         data["status_temperature"] = await self._async_get_value("heater/status/temperature")
         data["network_status"] = await self.async_get_networkStatus()
+        data["pool_config"]= await self.async_get_poolConfig()
 
         status_summary = await self._async_get_value("heater/status/summary")
         for key in status_summary:
@@ -122,24 +123,23 @@ class HeaterControlApiClient:
         """Get heater data from the API."""
         ret = await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/metrics",
+            url=f"http://{self._host}/21control/status/system",
         )
-        pattern = r"process_cpu_user_seconds_total{device=\"(.*)\",app_version=\"(.*)\"}"
-        matches = re.findall(pattern, ret)
-        data = {}
-        if matches[0]:
-            data["device"] = matches[0][0]
-            data["app_version"] = matches[0][1]
 
-        data["model"] = await self._api_wrapper(
-            method="get",
-            url=f"http://{self._host}/21control/key-value/get/heater_model",
-        )
-        data["pool_username"] = await self._api_wrapper(
-            method="get",
-            url=f"http://{self._host}/21control/key-value/get/heater_pool_username",
-        )
+        data = {"model": ret["model"], "is_paired": ret["isPaired"], "product_id": ret["productId"],
+                "version": ret["version"]}
         self._data = data
+        return data
+
+    async def async_get_poolConfig(self) -> Any:
+        """Get heater pool config from the API."""
+        ret = await self._api_wrapper(
+            method="get",
+            url=f"http://{self._host}/21control/heater/poolConfig",
+        )
+
+        data = {"poolUrl1": ret["poolUrl1"], "poolUser1": ret["username1"], "poolUrl2": ret["poolUrl2"],
+                "poolUser2": ret["username2"]}
         return data
 
     async def async_get_networkStatus(self) -> Any:

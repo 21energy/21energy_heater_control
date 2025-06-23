@@ -65,12 +65,16 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await self._validate_and_setup()
-                if "device" in info:
+
+                if not info["is_paired"]:
+                    errors["base"] = "Your device is not paired! Please first pair your device through the 21energy app on your phone."
+
+                elif "device" in info:
                     await self.async_set_unique_id(info["device"])
                     self._abort_if_unique_id_configured(updates=user_input)
                     user_input["device"] = info["device"]
                     user_input["model"] = info["model"]
-                    user_input["app_version"] = info["app_version"]
+                    user_input["version"] = info["version"]
                     user_input["pool_username"] = info["pool_username"]
                 return self.async_create_entry(title=f"{info["model"]} ({info["device"]})", data=user_input)
 
