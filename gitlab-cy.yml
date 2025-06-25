@@ -1,0 +1,72 @@
+stages:
+  - deploy
+
+deploy_to_github:
+  stage: deploy
+  image: alpine:latest
+
+  variables:
+    GIT_STRATEGY: clone
+    GITHUB_REPO: 21energy/21home_assistant
+    EXCLUDED_FILES: >
+      .gitlab-ci.yml
+      ./scripts/start
+      ./scripts/lint
+      ./scripts/setup
+      ./scripts/stop
+      ./config/configuration.yaml
+
+  before_script:
+    - apk add --no-cache git curl bash
+
+  script:
+    # Clone fresh copy to a temporary folder
+    - git clone . ../export-repo
+    - cd ../export-repo
+
+    # Remove excluded files
+    - for file in $EXCLUDED_FILES; do rm -f "$file"; done
+
+    # Bump version in manifest.json
+    - VERSION=$(jq -r '.version' manifest.json)
+    - IFS='.' read -r major minor patch <<< "$VERSION"
+    - NEW_VERSION="$major.$minor.$((patch + 1))"
+    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+
+    # Commit version bump
+    - git config user.name "GitLab CI"
+    - git config user.email "ci@example.com"
+    - git add manifest.json
+    - git commit -m "CI: Bump version to $NEW_VERSION" || echo "Nothing to commit"
+
+
+    # Push to GitHub
+    - git remote add github https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git
+    - git push github HEAD:main
+
+    # Create GitHub Release
+    - |
+      curl -s -X POST https://api.github.com/repos/$GITHUB_REPO/releases \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d @- <<EOF
+      {
+        "tag_name": "$NEW_VERSION",
+        "name": "$NEW_VERSION",
+        "body": "Automated release from GitLab CI",
+        "draft": false,
+        "prerelease": false
+      }
+  EOF
+# Push version bump back to original GitLab repo (without excluding files)
+- cd ../21home_assistant
+- git config user.name "GitLab CI"
+- git config user.email "ci@example.com"
+- jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+- git add manifest.json
+- git commit -m "CI: Bump version to $NEW_VERSION [skip ci]" || echo "Nothing to commit"
+- git remote set-url origin https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
+- git push origin HEAD:main
+
+only:
+  - main
