@@ -9,8 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from ..entity import HeaterControlEntity
+
 from ..const import DOMAIN
+from ..entity import HeaterControlEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -80,3 +81,9 @@ class HeaterControlBinarySensor(HeaterControlEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return the availability."""
         return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        # Ensure we listen for coordinator updates
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )

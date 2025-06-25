@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import re
 import socket
 from typing import Any
 
 import aiohttp
 import async_timeout
-import re
 
 from .const import LOGGER
 
@@ -142,7 +142,7 @@ class HeaterControlApiClient:
         data = {
             "model": ret["model"],
             "is_paired": ret["isPaired"],
-            "product_id": ret["productId"],
+            "product_id": ret["productId"].split()[-1],
             "version": ret["version"],
         }
         self._data = data
@@ -154,12 +154,12 @@ class HeaterControlApiClient:
             method="get",
             url=f"http://{self._host}/21control/heater/poolConfig",
         )
-
+        LOGGER.debug(f"received poolConfig:{ret}")
         data = {
-            "poolUrl1": ret["poolUrl1"],
-            "poolUser1": ret["username1"],
-            "poolUrl2": ret["poolUrl2"],
-            "poolUser2": ret["username2"],
+            "poolUrl1": ret["url1"],
+            "poolUser1": ret["user1"],
+            "poolUrl2": ret["url2"],
+            "poolUser2": ret["user2"],
         }
         return data
 
@@ -172,7 +172,7 @@ class HeaterControlApiClient:
         data = {
             "type": re.sub(r"\d", "", ret["interface"]),
             "ssid": ret["essid"],
-            "quality": ret["min_quality"],
+            "quality": ret["minQuality"],
             "max_quality": ret["maxQuality"],
             "signal_level": ret["signalLevel"],
         }

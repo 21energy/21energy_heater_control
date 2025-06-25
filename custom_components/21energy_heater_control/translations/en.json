@@ -83,6 +83,18 @@
       },
       "foundblocks": {
         "name": "Found Blocks"
+      },
+      "network_name": {
+        "name": "Network"
+      },
+      "network_quality": {
+        "name": "Network quality"
+      },
+      "pool_1": {
+        "name": "Pool config"
+      },
+      "pool_2": {
+        "name": "Backup pool config"
       }
     },
     "switch": {

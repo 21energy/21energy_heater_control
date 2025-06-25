@@ -2,6 +2,7 @@
 set -e
 
 echo "🔧 Creating virtual environment..."
+rm -rf venv
 python3 -m venv venv
 source venv/bin/activate
 

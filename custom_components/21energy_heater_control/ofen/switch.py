@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
-from dataclasses import dataclass
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+
 from ..const import DOMAIN, LOGGER, STATE_ON, STATE_OFF
 from ..entity import HeaterControlEntity
-
-
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -121,3 +120,9 @@ class HeaterControlSwitch(HeaterControlEntity, SwitchEntity):
     def available(self) -> bool:
         """Return the availability."""
         return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        # Ensure we listen for coordinator updates
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )

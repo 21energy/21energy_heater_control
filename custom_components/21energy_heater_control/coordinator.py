@@ -33,8 +33,9 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
         name,
         update_interval,
     ):
+        logger.debug(f"DATA UPDATE COORDINATOR INIT with data {entry.data}")
         self.entry = entry
-        self.device = entry.data["device"]
+        self.device = entry.data["product_id"]
         super().__init__(
             hass, logger=logger, name=name, update_interval=update_interval
         )

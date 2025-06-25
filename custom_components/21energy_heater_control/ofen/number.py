@@ -10,8 +10,8 @@ from homeassistant.components.number import (
     NumberMode,
 )
 
-from ..entity import HeaterControlEntity
 from ..const import DOMAIN, LOGGER
+from ..entity import HeaterControlEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -67,6 +67,12 @@ class HeaterControlNumber(HeaterControlEntity, NumberEntity):
         )
         self.entity_id = (
             f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        # Ensure we listen for coordinator updates
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
     @property

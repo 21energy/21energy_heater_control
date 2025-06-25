@@ -5,13 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 from .api import HeaterControlApiClient, HeaterControlApiClientOutdatedError
+from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -70,18 +69,19 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await self._validate_and_setup()
+                LOGGER.debug(f"_async_step_user_base => setting up device with info {info}")
 
                 if not info["is_paired"]:
                     errors["base"] = "unpaired"
-                elif "device" in info:
-                    await self.async_set_unique_id(info["device"])
+                elif "product_id" in info:
+                    await self.async_set_unique_id(info["product_id"])
                     self._abort_if_unique_id_configured(updates=user_input)
-                    user_input["device"] = info["device"]
+                    user_input["product_id"] = info["product_id"]
                     user_input["model"] = info["model"]
                     user_input["version"] = info["version"]
-                    user_input["pool_username"] = info["pool_username"]
+                    user_input["pool_config"] = info["pool_config"]
                 return self.async_create_entry(
-                    title=f"{info['model']} ({info['device']})", data=user_input
+                    title=f"{info['model']} ({info['product_id']})", data=user_input
                 )
 
             except CannotConnect:
@@ -126,4 +126,5 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect
         else:
             result = await client.async_get_device()
+            result["pool_config"] = await client.async_get_poolConfig()
         return result

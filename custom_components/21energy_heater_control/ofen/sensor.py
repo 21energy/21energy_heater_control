@@ -11,8 +11,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature, UnitOfPower
-from ..entity import HeaterControlEntity
+
 from ..const import DOMAIN
+from ..entity import HeaterControlEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from ..coordinator import HeaterControlDataUpdateCoordinator
     from ..data import HeaterControlConfigEntry
 
+ALWAYS_AVAILABLE_SENSORS = {"network_name", "network_quality", "pool_1", "pool_2"}
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="status_temperature",
@@ -43,7 +45,7 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="power_limit",
         icon="mdi:lightning-bolt-outline",
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -70,7 +72,7 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="hashrate_1m",
         icon="mdi:numeric",
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=None,
@@ -123,18 +125,52 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="foundblocks",
         icon="mdi:numeric",
+        entity_registry_enabled_default=False,
+        device_class=None,
+        state_class=None,
+        native_unit_of_measurement=None,
+    ),
+    SensorEntityDescription(
+        key="network_name",
+        icon="mdi:wifi",
         entity_registry_enabled_default=True,
         device_class=None,
         state_class=None,
         native_unit_of_measurement=None,
     ),
+
+    SensorEntityDescription(
+        key="network_quality",
+        icon="mdi:wifi-strength-2",
+        entity_registry_enabled_default=True,
+        device_class=None,
+        state_class=None,
+        native_unit_of_measurement=None,
+    ),
+    SensorEntityDescription(
+        key="pool_1",
+        icon="mdi:pool",
+        entity_registry_enabled_default=True,
+        device_class=None,
+        state_class=None,
+        native_unit_of_measurement=None,
+    ),
+    SensorEntityDescription(
+        key="pool_2",
+        icon="mdi:pool",
+        entity_registry_enabled_default=False,
+        device_class=None,
+        state_class=None,
+        native_unit_of_measurement=None,
+    ),
+
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
-    entry: HeaterControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+        entry: HeaterControlConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     async_add_entities(
@@ -150,9 +186,9 @@ class HeaterControlSensor(HeaterControlEntity, SensorEntity):
     """HeaterControlSensor class."""
 
     def __init__(
-        self,
-        coordinator: HeaterControlDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+            self,
+            coordinator: HeaterControlDataUpdateCoordinator,
+            entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(coordinator)
@@ -168,11 +204,30 @@ class HeaterControlSensor(HeaterControlEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the native value of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if self.entity_description.key == "network_name":
+            return self.coordinator.data.get("network_status")['ssid']
+        elif self.entity_description.key == "network_quality":
+            net_state = self.coordinator.data.get('network_status')
+            return f"{net_state['quality']}/{net_state['max_quality']}"
+        elif self.entity_description.key == "pool_1":
+            pool_conf = self.coordinator.data.get("pool_config")
+            return f"{pool_conf['poolUser1']}\n{pool_conf['poolUrl1']}"
+        elif self.entity_description.key == "pool_2":
+            pool_conf = self.coordinator.data.get("pool_config")
+            return f"{pool_conf['poolUser2']}\n{pool_conf['poolUrl2']}"
+
+        else:
+            return self.coordinator.data.get(self.entity_description.key)
 
     @property
     def available(self) -> bool:
         """Return the availability."""
-        if self.coordinator.device_is_running:
+        if self.entity_description.key in ALWAYS_AVAILABLE_SENSORS or self.coordinator.device_is_running:
             return self.coordinator.last_update_success
         return False
+
+    async def async_added_to_hass(self) -> None:
+        # Ensure we listen for coordinator updates
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
