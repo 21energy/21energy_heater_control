@@ -74,3 +74,5 @@ deploy_to_github:
 #    - git commit -m "Bump version to $NEW_VERSION [skip ci]" || echo "Nothing to commit"
 #    - git remote set-url origin https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
 #    - git push origin HEAD:main
+  after_script:
+    - rm -rf ../export-repo || true
