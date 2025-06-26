@@ -30,11 +30,11 @@ deploy_to_github:
     # Remove excluded files
     - for file in $EXCLUDED_FILES; do rm -f "$file"; done
 
-    # Bump version in manifest.json
-    - VERSION=$(jq -r '.version' manifest.json)
-    - IFS='.' read -r major minor patch <<< "$VERSION"
-    - NEW_VERSION="$major.$minor.$((patch + 1))"
-    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+    #    # Bump version in manifest.json
+    #    - VERSION=$(jq -r '.version' manifest.json)
+    #    - IFS='.' read -r major minor patch <<< "$VERSION"
+    #    - NEW_VERSION="$major.$minor.$((patch + 1))"
+    #    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
 
     # Commit version bump
     - git config user.name "GitLab CI"
@@ -61,12 +61,12 @@ deploy_to_github:
         "prerelease": false
       }
       EOF
-    # Push version bump back to original GitLab repo (without excluding files)
-    - cd ../21home_assistant
-    - git config user.name "GitLab CI"
-    - git config user.email "ci@21energy.com"
-    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
-    - git add manifest.json
-    - git commit -m "Bump version to $NEW_VERSION [skip ci]" || echo "Nothing to commit"
-    - git remote set-url origin https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
-    - git push origin HEAD:main
+#    # Push version bump back to original GitLab repo (without excluding files)
+#    - cd ../21home_assistant
+#    - git config user.name "GitLab CI"
+#    - git config user.email "ci@21energy.com"
+#    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+#    - git add manifest.json
+#    - git commit -m "Bump version to $NEW_VERSION [skip ci]" || echo "Nothing to commit"
+#    - git remote set-url origin https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
+#    - git push origin HEAD:main
