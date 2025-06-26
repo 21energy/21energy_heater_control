@@ -1,12 +1,14 @@
 {
-    "domain": "21energy_heater_control",
-    "name": "21energy Heater Control",
-    "codeowners": ["@21energy"],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://github.com/21energy/21home_assistant",
-    "iot_class": "local_polling",
-    "issue_tracker": "https://github.com/21energy/21home_assistant/issues",
-    "requirements": [],
-    "version": "0.0.6"
+  "domain": "21energy_heater_control",
+  "name": "21energy Heater Control",
+  "codeowners": [
+    "@21energy"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/21energy/21home_assistant",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/21energy/21home_assistant/issues",
+  "requirements": [],
+  "version": "0.0.7"
 }
