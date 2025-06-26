@@ -4,6 +4,9 @@ stages:
 deploy_to_github:
   stage: deploy
   image: alpine:latest
+  interruptible: true
+  tags:
+    - macos
 
   only:
     - main
