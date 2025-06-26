@@ -43,7 +43,7 @@ deploy_to_github:
     # Commit version bump
     - git config user.name "GitLab CI"
     - git config user.email "ci@example.com"
-    - git add manifest.json
+    - git add ./custom_components/21energy_heater_control/manifest.json
     - git commit -m "Bump version to $NEW_VERSION" || echo "Nothing to commit"
 
 
@@ -70,7 +70,7 @@ deploy_to_github:
 #    - git config user.name "GitLab CI"
 #    - git config user.email "ci@21energy.com"
 #    - jq --arg v "$NEW_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
-#    - git add manifest.json
+#    - git add ./custom_components/21energy_heater_control/manifest.json
 #    - git commit -m "Bump version to $NEW_VERSION [skip ci]" || echo "Nothing to commit"
 #    - git remote set-url origin https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
 #    - git push origin HEAD:main
