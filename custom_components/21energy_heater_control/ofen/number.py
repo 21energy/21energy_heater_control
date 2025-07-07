@@ -78,7 +78,8 @@ class HeaterControlNumber(HeaterControlEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the native value of the number."""
-        return self.coordinator.data.get(self.entity_description.key)
+        value = self.coordinator.data.get(self.entity_description.key)
+        return float(value) + 1 if value is not None else None
 
     @property
     def available(self) -> bool:
@@ -90,11 +91,11 @@ class HeaterControlNumber(HeaterControlEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         try:
             LOGGER.debug(
-                f"async_set_native_value => {self.entity_description.key}:{value}"
+                f"async_set_native_value => {self.entity_description.key}:{value}-1 = {value - 1}"
             )
 
             if self.entity_description.key == "powertarget":
-                value = int(round(value))
+                value = int(round(value - 1))
                 await self.coordinator.entry.runtime_data.client.async_set_powerTarget(
                     value
                 )

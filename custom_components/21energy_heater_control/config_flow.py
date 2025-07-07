@@ -73,6 +73,9 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if not info["is_paired"]:
                     errors["base"] = "unpaired"
+                    return self.async_show_form(
+                        step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                    )
                 elif "product_id" in info:
                     await self.async_set_unique_id(info["product_id"])
                     self._abort_if_unique_id_configured(updates=user_input)
@@ -80,6 +83,7 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["model"] = info["model"]
                     user_input["version"] = info["version"]
                     user_input["pool_config"] = info["pool_config"]
+                LOGGER.debug(f"_async_step_user_base => Passing to creation {user_input}")
                 return self.async_create_entry(
                     title=f"{info['model']} ({info['product_id']})", data=user_input
                 )

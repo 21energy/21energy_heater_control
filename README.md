@@ -16,18 +16,24 @@ fully locally and does not rely on external 21energy infrastructure.
 | `switch`        | Switch the Heater on / off.        |
 | `number`        | Select power level.                |
 
+## Automation Blueprints
+
+We also provide a set of Home Assistant automation blueprints designed for flexible control of the heater.
+Find and import these blueprints
+from: [github.com/21energy/21home_assistant_automation_blueprint](https://github.com/21energy/21home_assistant_automation_blueprint)
+
 ## Setup / Installation
 
 ### Step 1: Install the integration
 
 #### Option 1: via HACS
 
-[![Open your Home Assistant instance and adding repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=der-berni&repository=21energy_heater_control&category=integration)
+[![Open your Home Assistant instance and adding repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=21energy&repository=21energy_heater_control&category=integration)
 
 - Install [Home Assistant Community Store (HACS)](https://hacs.xyz/)
 - Add integration repository (search for `"21energy"` in "Explore & Download Repositories")
 - Use the 3-dots at the right of the list entry to download / install the custom integration.
-- After you presses download and the process has completed, you must __restart Home Assistant__ to install all
+- After you press download and the process has completed, you must __restart Home Assistant__ to install all
   dependencies
 - Setup the custom integration as described below (see _Step 2: Adding or enabling the integration_)
 
