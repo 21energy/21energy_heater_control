@@ -22,15 +22,8 @@ deploy_to_github:
     - which bash || brew install bash
 
   script:
-    - EXCLUDED=(".gitlab-ci.yml""./scripts/""./config/")
-    - EXCLUDE_ARGS=()
-    - |
-      for item in "${EXCLUDESD[@]}"; do
-      EXCLUDE_ARGS+=(--exclude="$item")
-      done
+    - EXCLUDED=("gitlab-ci.yml""scripts/""config/",".git/",".idea")
 
-    # Also exclude any directory with ".git" in its name
-    - EXCLUDE_ARGS+=(--exclude='.git/')
     - VERSION=$(jq -r '.version' custom_components/21energy_heater_control/manifest.json)
     - rm -rf ../export-repo
     - mkdir ../export-repo
@@ -43,10 +36,10 @@ deploy_to_github:
     - git remote add github https://$GITHUB_TOKEN@github.com/$GITHUB_REPO.git
     - git fetch github $GITHUB_BRANCH
     - git checkout -b $GITHUB_BRANCH github/$GITHUB_BRANCH
-    - rsync -av "${EXCLUDE_ARGS[@]}" ../21home_assistant ./
+    - rsync -av ../21home_assistant ./
 
     # Remove excluded files
-    - for file in $EXCLUDED; do rm -f "$file"; done
+    - for file in $EXCLUDED; do rm -rf "$file"; done
 
     # Bump version in manifest.json
 
