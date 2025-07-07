@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+echo "🔧 Creating virtual environment..."
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
+
+echo "⬆️  Upgrading pip and installing Home Assistant..."
+pip install --upgrade pip wheel
+pip install homeassistant
+
+echo "✅ Setup complete. You can now run ./start.sh"

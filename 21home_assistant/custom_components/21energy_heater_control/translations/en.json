@@ -1,0 +1,106 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "outdated": "It seems your Ofen is not up-to-date. Please wait a few days for the Ofen to update itself. If it doesn't resolve itself, please contact us.",
+      "unknown": "Unexpected error. Please try again later.",
+      "unpaired": "Your device is not paired! Please first pair your device through the 21energy app on your phone."
+    },
+    "step": {
+      "user": {
+        "title": "Connect your 21energy device!",
+        "description": "To get started enter the local ip or hostname of your 21energy device.",
+        "data": {
+          "host": "Host",
+          "polling_interval": "Interval"
+        },
+        "data_description": {
+          "host": "The hostname or IP-address of your Heater device.",
+          "polling_interval": "Polling Interval in seconds"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status_running": {
+        "name": "Heater"
+      },
+      "connected": {
+        "name": "Connected"
+      }
+    },
+    "number": {
+      "powertarget": {
+        "name": "Power target"
+      },
+      "fanspeed": {
+        "name": "Fan speed"
+      }
+    },
+    "select": {
+      "fan_mode": {
+        "name": "Fan mode"
+      }
+    },
+    "sensor": {
+      "status_temperature": {
+        "name": "Temperature"
+      },
+      "powertarget_watt": {
+        "name": "Power target"
+      },
+      "power_limit": {
+        "name": "Power limit"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "hashrate_5s": {
+        "name": "Hashrate 5 Seconds"
+      },
+      "hashrate_1m": {
+        "name": "Hashrate 1 Minute"
+      },
+      "hashrate_5m": {
+        "name": "Hashrate 5 Minutes"
+      },
+      "hashrate_15m": {
+        "name": "Hashrate 15 Minutes"
+      },
+      "hashrate_24h": {
+        "name": "Hashrate 24 Hour"
+      },
+      "hashrate_av": {
+        "name": "Hashrate Average"
+      },
+      "poolstatus": {
+        "name": "Pool status"
+      },
+      "foundblocks": {
+        "name": "Found Blocks"
+      },
+      "network_name": {
+        "name": "Network"
+      },
+      "network_quality": {
+        "name": "Network quality"
+      },
+      "pool_1": {
+        "name": "Pool config"
+      },
+      "pool_2": {
+        "name": "Backup pool config"
+      }
+    },
+    "switch": {
+      "enable": {
+        "name": "Heater"
+      }
+    }
+  }
+}
