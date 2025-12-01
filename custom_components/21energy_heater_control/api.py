@@ -45,6 +45,17 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     response.raise_for_status()
 
 
+def pick(primary: str, fallback: str, source: dict):
+    """
+    Safely return source[primary] unless it is None or empty string.
+    Otherwise return source[fallback] if present.
+    """
+    val = source.get(primary)
+    if val is None or val == "":
+        return source.get(fallback)
+    return val
+
+
 class HeaterControlApiClient:
     """API Client."""
 
@@ -275,10 +286,10 @@ class HeaterControlApiClient:
         )
         LOGGER.debug(f"received poolConfig:{ret}")
         data = {
-            "poolUrl1": ret["url1"],
-            "poolUser1": ret["user1"],
-            "poolUrl2": ret["url2"],
-            "poolUser2": ret["user2"],
+            "poolUrl1": pick("url1", "poolUrl1", ret),
+            "poolUser1": pick("user1", "poolUser1", ret),
+            "poolUrl2": pick("url2", "poolUrl2", ret),
+            "poolUser2": pick("user2", "poolUser2", ret),
         }
         return data
 
