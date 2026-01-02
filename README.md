@@ -20,7 +20,7 @@ fully locally and does not rely on external 21energy infrastructure.
 
 We also provide a set of Home Assistant automation blueprints designed for flexible control of the heater.
 Find and import these blueprints
-from: [github.com/21energy/21home_assistant_automation_blueprint](https://github.com/21energy/21home_assistant_automation_blueprint)
+from: [github.com/21energy/21home_assistant_automation_blueprints](https://github.com/21energy/21home_assistant_automation_blueprints)
 
 ## Setup / Installation
 
