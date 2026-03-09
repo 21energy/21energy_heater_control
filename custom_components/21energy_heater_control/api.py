@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 import socket
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 from .const import LOGGER
 
@@ -75,9 +75,11 @@ class HeaterControlApiClient:
         data["status"] = await self.async_get_status()
         data["fanspeed"] = int(float(await self._async_get_value("heater/status/fan")))
         data["powertarget"] = await self._async_get_value("heater/powerTarget")
-        data["powertarget_watt"] = float(str(
-            await self._async_get_value("heater/powerTarget/watt")
-        ).replace("W", "")) / 3
+        raw_watt = await self._async_get_value("heater/powerTarget/watt")
+        try:
+            data["powertarget_watt"] = float(str(raw_watt).replace("W", "")) / 3
+        except (ValueError, TypeError):
+            data["powertarget_watt"] = None
         data["status_temperature"] = await self._async_get_value(
             "heater/status/temperature"
         )
@@ -151,12 +153,12 @@ class HeaterControlApiClient:
                 real = miner.get("real_hashrate") or {}
 
                 def _gh_to_mh(d, path_keys):
-                    # safe accessor: returns value*1000 if present
+                    # safe accessor: returns value in GH/s converted to MH/s
                     cur = d
                     try:
                         for k in path_keys:
                             cur = cur[k]
-                        return float(cur)
+                        return float(cur) * 1000.0
                     except Exception:
                         return None
 
@@ -207,18 +209,28 @@ class HeaterControlApiClient:
                 if key in ["foundBlocks", "poolStatus"]:
                     data[key.lower()] = status_summary[key]
                 elif key == "power":
-                    data["power_limit"] = status_summary[key]["limitW"] / 3
-                    data["power_consumption"] = status_summary[key]["approxConsumptionW"]
+                    power = status_summary[key] or {}
+                    if "limitW" in power:
+                        data["power_limit"] = power["limitW"] / 3
+                    if "approxConsumptionW" in power:
+                        data["power_consumption"] = power["approxConsumptionW"]
                 elif key == "realHashrate":
-                    data["hashrate_5s"] = status_summary[key]["mhs5S"]
-                    data["hashrate_1m"] = status_summary[key]["mhs1M"]
-                    data["hashrate_5m"] = status_summary[key]["mhs5M"]
-                    data["hashrate_15m"] = status_summary[key]["mhs15M"]
-                    data["hashrate_24h"] = status_summary[key]["mhs24H"]
-                    data["hashrate_av"] = status_summary[key]["mhsAv"]
+                    hr = status_summary[key] or {}
+                    if "mhs5S" in hr:
+                        data["hashrate_5s"] = hr["mhs5S"]
+                    if "mhs1M" in hr:
+                        data["hashrate_1m"] = hr["mhs1M"]
+                    if "mhs5M" in hr:
+                        data["hashrate_5m"] = hr["mhs5M"]
+                    if "mhs15M" in hr:
+                        data["hashrate_15m"] = hr["mhs15M"]
+                    if "mhs24H" in hr:
+                        data["hashrate_24h"] = hr["mhs24H"]
+                    if "mhsAv" in hr:
+                        data["hashrate_av"] = hr["mhsAv"]
 
             data["status_running"] = (
-                    data["status"] == True and "tunerStatus" in status_summary
+                    data["status"] is True and "tunerStatus" in status_summary
             )
 
         data["enable"] = data["status_running"]
@@ -240,16 +252,12 @@ class HeaterControlApiClient:
 
     async def async_set_enable(self, value: bool) -> None:
         """Enable or disable the Heater."""
-        try:
-            await self._api_wrapper(
-                method="post",
-                url=f"http://{self._host}/21control/heater/enable",
-                data={"enabled": value},
-                headers={"Content-type": "application/json; charset=UTF-8"},
-            )
-            return None
-        except:
-            return None
+        await self._api_wrapper(
+            method="post",
+            url=f"http://{self._host}/21control/heater/enable",
+            data={"enabled": value},
+            headers={"Content-type": "application/json; charset=UTF-8"},
+        )
 
     async def async_get_status(self) -> bool:
         """Get data from the API."""
@@ -257,7 +265,7 @@ class HeaterControlApiClient:
             method="get",
             url=f"http://{self._host}/21control/status",
         )
-        LOGGER.debug(f"typof ret:{type(ret)}")
+        LOGGER.debug("typeof ret: %s", type(ret))
         if "operational" in ret:
             return ret["operational"]
         return False
@@ -269,11 +277,13 @@ class HeaterControlApiClient:
             url=f"http://{self._host}/21control/status/system",
         )
 
+        product_id_raw = ret.get("productId") or ""
+        product_id_parts = product_id_raw.split()
         data = {
-            "model": ret["model"],
-            "is_paired": ret["isPaired"],
-            "product_id": ret["productId"].split()[-1],
-            "version": ret["version"],
+            "model": ret.get("model", "Unknown"),
+            "is_paired": ret.get("isPaired", False),
+            "product_id": product_id_parts[-1] if product_id_parts else product_id_raw,
+            "version": ret.get("version", ""),
         }
         self._data = data
         return data
@@ -284,7 +294,7 @@ class HeaterControlApiClient:
             method="get",
             url=f"http://{self._host}/21control/heater/poolConfig",
         )
-        LOGGER.debug(f"received poolConfig:{ret}")
+        LOGGER.debug("received poolConfig: %s", ret)
         data = {
             "poolUrl1": pick("url1", "poolUrl1", ret),
             "poolUser1": pick("user1", "poolUser1", ret),
@@ -300,11 +310,11 @@ class HeaterControlApiClient:
             url=f"http://{self._host}/21control/heater/networkStatus",
         )
         data = {
-            "type": re.sub(r"\d", "", ret["interface"]),
-            "ssid": ret["essid"],
-            "quality": ret["minQuality"],
-            "max_quality": ret["maxQuality"],
-            "signal_level": ret["signalLevel"],
+            "type": re.sub(r"\d", "", ret.get("interface") or ""),
+            "ssid": ret.get("essid"),
+            "quality": ret.get("minQuality"),
+            "max_quality": ret.get("maxQuality"),
+            "signal_level": ret.get("signalLevel"),
         }
         return data
 
@@ -323,12 +333,15 @@ class HeaterControlApiClient:
         headers: dict | None = None,
     ) -> Any:
         """Get information from the API."""
+        request_headers = {"Host": self._host}
+        if headers:
+            request_headers.update(headers)
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await self._session.request(
                     method=method,
                     url=url,
-                    headers=headers,
+                    headers=request_headers,
                     json=data,
                 )
                 _verify_response_or_raise(response)
@@ -339,11 +352,11 @@ class HeaterControlApiClient:
                 if responseType == "json":
                     try:
                         ret = await response.json()
-                    except:
+                    except (ValueError, aiohttp.ContentTypeError):
                         ret = await response.text()
                 else:
                     ret = await response.text()
-                LOGGER.debug(f"_api_wrapper => url:{url} => response:{ret}")
+                LOGGER.debug("_api_wrapper => url:%s => response:%s", url, ret)
                 return ret
 
         except TimeoutError as exception:

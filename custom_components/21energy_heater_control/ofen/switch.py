@@ -1,4 +1,4 @@
-"""Swtich platform for 21energy_heater_control."""
+"""Switch platform for 21energy_heater_control."""
 
 from __future__ import annotations
 
@@ -70,23 +70,17 @@ class HeaterControlSwitch(HeaterControlEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        try:
-            await self.coordinator.async_set_device_enable(
-                self.entity_description.key, True
-            )
-            self.async_write_ha_state()
-        except ValueError:
-            return "unavailable"
+        await self.coordinator.async_set_device_enable(
+            self.entity_description.key, True
+        )
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        try:
-            await self.coordinator.async_set_device_enable(
-                self.entity_description.key, False
-            )
-            self.async_write_ha_state()
-        except ValueError:
-            return "unavailable"
+        await self.coordinator.async_set_device_enable(
+            self.entity_description.key, False
+        )
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -95,7 +89,7 @@ class HeaterControlSwitch(HeaterControlEntity, SwitchEntity):
             if value is None or value == "":
                 value = None
         except KeyError:
-            LOGGER.warning(f"is_on caused KeyError for: {self.entity_description.key}")
+            LOGGER.warning("is_on caused KeyError for: %s", self.entity_description.key)
             value = None
         except TypeError:
             return None

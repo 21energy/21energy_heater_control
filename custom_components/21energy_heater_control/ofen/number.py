@@ -89,18 +89,15 @@ class HeaterControlNumber(HeaterControlEntity, NumberEntity):
         return False
 
     async def async_set_native_value(self, value: float) -> None:
-        try:
-            LOGGER.debug(
-                f"async_set_native_value => {self.entity_description.key}:{value}-1 = {value - 1}"
+        LOGGER.debug(
+            "async_set_native_value => %s:%s-1 = %s",
+            self.entity_description.key, value, value - 1,
+        )
+
+        if self.entity_description.key == "powertarget":
+            api_value = int(round(value - 1))
+            await self.coordinator.entry.runtime_data.client.async_set_powerTarget(
+                api_value
             )
 
-            if self.entity_description.key == "powertarget":
-                value = int(round(value - 1))
-                await self.coordinator.entry.runtime_data.client.async_set_powerTarget(
-                    value
-                )
-
-            await self.coordinator.async_refresh()
-            return self.coordinator.data.get(self.entity_description.key)
-        except ValueError:
-            return "unavailable"
+        await self.coordinator.async_refresh()
