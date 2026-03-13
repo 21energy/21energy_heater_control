@@ -205,17 +205,25 @@ class HeaterControlSensor(HeaterControlEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the native value of the sensor."""
         if self.entity_description.key == "network_name":
-            return self.coordinator.data.get("network_status")['ssid']
+            net_status = self.coordinator.data.get("network_status")
+            if net_status is None:
+                return None
+            return net_status.get("ssid")
         elif self.entity_description.key == "network_quality":
-            net_state = self.coordinator.data.get('network_status')
-            return f"{net_state['quality']}/{net_state['max_quality']}"
+            net_state = self.coordinator.data.get("network_status")
+            if net_state is None:
+                return None
+            return f"{net_state.get('quality')}/{net_state.get('max_quality')}"
         elif self.entity_description.key == "pool_1":
             pool_conf = self.coordinator.data.get("pool_config")
-            return f"{pool_conf['poolUser1']}\n{pool_conf['poolUrl1']}"
+            if pool_conf is None:
+                return None
+            return f"{pool_conf.get('poolUser1')}\n{pool_conf.get('poolUrl1')}"
         elif self.entity_description.key == "pool_2":
             pool_conf = self.coordinator.data.get("pool_config")
-            return f"{pool_conf['poolUser2']}\n{pool_conf['poolUrl2']}"
-
+            if pool_conf is None:
+                return None
+            return f"{pool_conf.get('poolUser2')}\n{pool_conf.get('poolUrl2')}"
         else:
             return self.coordinator.data.get(self.entity_description.key)
 

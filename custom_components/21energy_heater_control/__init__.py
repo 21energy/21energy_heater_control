@@ -1,4 +1,4 @@
-"""The 12engergy Heater Control integration."""
+"""The 21energy Heater Control integration."""
 
 from __future__ import annotations
 
@@ -24,7 +24,6 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.SWITCH,
     Platform.NUMBER,
-    Platform.SELECT,
 ]
 
 

@@ -33,7 +33,7 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
         name,
         update_interval,
     ):
-        logger.debug(f"DATA UPDATE COORDINATOR INIT with data {entry.data}")
+        logger.debug("DATA UPDATE COORDINATOR INIT with data %s", entry.data)
         self.entry = entry
         self.device = entry.data["product_id"]
         super().__init__(
@@ -43,7 +43,7 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_is_running(self) -> bool:
         """Return the availability."""
-        if "status_running" in self.data:
+        if self.data and "status_running" in self.data:
             if self.data.get("status_running"):
                 return self.last_update_success
         return False

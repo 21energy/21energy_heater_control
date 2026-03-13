@@ -9,7 +9,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import HeaterControlApiClient, HeaterControlApiClientOutdatedError
+from .api import HeaterControlApiClient, HeaterControlApiClientCommunicationError, HeaterControlApiClientOutdatedError
 from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -64,38 +64,42 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._interval = user_input[CONF_POLLING_INTERVAL]
-            LOGGER.debug(f"_async_step_user_base => _host:{self._host}")
-            LOGGER.debug(f"_async_step_user_base => _interval:{self._interval}")
+            LOGGER.debug("_async_step_user_base => _host:%s", self._host)
+            LOGGER.debug("_async_step_user_base => _interval:%s", self._interval)
 
             try:
                 info = await self._validate_and_setup()
-                LOGGER.debug(f"_async_step_user_base => setting up device with info {info}")
+                LOGGER.debug("_async_step_user_base => setting up device with info %s", info)
 
                 if not info["is_paired"]:
                     errors["base"] = "unpaired"
                     return self.async_show_form(
                         step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
                     )
-                elif "product_id" in info:
-                    await self.async_set_unique_id(info["product_id"])
-                    self._abort_if_unique_id_configured(updates=user_input)
-                    user_input["product_id"] = info["product_id"]
-                    user_input["model"] = info["model"]
-                    user_input["version"] = info["version"]
-                    user_input["pool_config"] = info["pool_config"]
-                LOGGER.debug(f"_async_step_user_base => Passing to creation {user_input}")
+                if "product_id" not in info or not info["product_id"]:
+                    errors["base"] = "unknown"
+                    return self.async_show_form(
+                        step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                    )
+                await self.async_set_unique_id(info["product_id"])
+                self._abort_if_unique_id_configured(updates=user_input)
+                user_input["product_id"] = info["product_id"]
+                user_input["model"] = info["model"]
+                user_input["version"] = info["version"]
+                user_input["pool_config"] = info["pool_config"]
+                LOGGER.debug("_async_step_user_base => Passing to creation %s", user_input)
                 return self.async_create_entry(
                     title=f"{info['model']} ({info['product_id']})", data=user_input
                 )
 
-            except CannotConnect:
+            except (CannotConnect, HeaterControlApiClientCommunicationError):
                 errors["base"] = "cannot_connect"
             except InvalidHost:
                 errors["host"] = "cannot_connect"
             except HeaterControlApiClientOutdatedError:
                 errors["base"] = "outdated"
             except Exception as e:
-                LOGGER.exception(f"Unexpected exception: {e}")
+                LOGGER.exception("Unexpected exception: %s", e)
                 errors["base"] = "unknown"
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
@@ -115,7 +119,7 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Validate the data can be used to set up a connection.
 
         if len(self._host) < 3:
-            LOGGER.exception("Invalid hostname %s!", self._host)
+            LOGGER.error("Invalid hostname %s!", self._host)
             raise InvalidHost
 
         client = HeaterControlApiClient(
@@ -126,7 +130,7 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not await client.async_get_status():
             # If there is an error, raise an exception to notify HA that there was a
             # problem. The UI will also show there was a problem
-            LOGGER.exception("Could not connect to %s!", self._host)
+            LOGGER.error("Could not connect to %s!", self._host)
             raise CannotConnect
         else:
             result = await client.async_get_device()
