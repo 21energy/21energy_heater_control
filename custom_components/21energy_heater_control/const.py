@@ -12,3 +12,7 @@ CONF_POLLING_INTERVAL = "polling_interval"
 DEVICE_CLASS_ENUM = "enum"
 STATE_ON = "on"
 STATE_OFF = "off"
+
+DEVICE_TYPE_OFEN = "21control"
+DEVICE_TYPE_PORT = "21port"
+CONF_DEVICE_TYPE = "device_type"

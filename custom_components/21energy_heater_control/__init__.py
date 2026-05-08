@@ -5,14 +5,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
-from .api import HeaterControlApiClient
 from .const import DOMAIN, CONF_POLLING_INTERVAL, LOGGER
 from .coordinator import HeaterControlDataUpdateCoordinator
 from .data import HeaterControlData
+from .device_registry import create_client
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -41,10 +41,7 @@ async def async_setup_entry(
         update_interval=timedelta(seconds=entry.data[CONF_POLLING_INTERVAL]),
     )
     entry.runtime_data = HeaterControlData(
-        client=HeaterControlApiClient(
-            host=entry.data[CONF_HOST],
-            session=async_get_clientsession(hass),
-        ),
+        client=create_client(entry.data, async_get_clientsession(hass)),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
     )

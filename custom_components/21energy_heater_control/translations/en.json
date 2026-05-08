@@ -1,4 +1,12 @@
 {
+  "selector": {
+    "device_type": {
+      "options": {
+        "21control": "Heater (Ofen)",
+        "21port": "Port"
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "Device is already configured"
@@ -8,10 +16,21 @@
       "invalid_auth": "Invalid authentication",
       "outdated": "It seems your Ofen is not up-to-date. Please wait a few days for the Ofen to update itself. If it doesn't resolve itself, please contact us.",
       "unknown": "Unexpected error. Please try again later.",
-      "unpaired": "Your device is not paired! Please first pair your device through the 21energy app on your phone."
+      "unpaired": "Your device is not paired! Please first pair your device through the 21energy app on your phone.",
+      "wrong_device_type": "The device at this address does not match the selected device type. Please check the host and device type."
     },
     "step": {
       "user": {
+        "title": "Select your 21energy device type",
+        "description": "Choose the type of 21energy device you want to add.",
+        "data": {
+          "device_type": "Device Type"
+        },
+        "data_description": {
+          "device_type": "The type of 21energy device (Heater/Ofen or 21port)."
+        }
+      },
+      "connection": {
         "title": "Connect your 21energy device!",
         "description": "To get started enter the local ip or hostname of your 21energy device.",
         "data": {
@@ -19,7 +38,7 @@
           "polling_interval": "Interval"
         },
         "data_description": {
-          "host": "The hostname or IP-address of your Heater device.",
+          "host": "The hostname or IP-address of your device.",
           "polling_interval": "Polling Interval in seconds"
         }
       }
@@ -32,6 +51,15 @@
       },
       "connected": {
         "name": "Connected"
+      },
+      "forge_reachable": {
+        "name": "Forge Connected"
+      },
+      "mining_enabled": {
+        "name": "Mining"
+      },
+      "pool_alive": {
+        "name": "Pool"
       }
     },
     "number": {
@@ -40,6 +68,12 @@
       },
       "fanspeed": {
         "name": "Fan speed"
+      },
+      "power_level": {
+        "name": "Power Level"
+      },
+      "global_power_level": {
+        "name": "Global Power Level"
       }
     },
     "sensor": {
@@ -90,11 +124,29 @@
       },
       "pool_2": {
         "name": "Backup pool config"
+      },
+      "device_count": {
+        "name": "Device Count"
+      },
+      "forge_status": {
+        "name": "Forge Status"
+      },
+      "pool_status": {
+        "name": "Pool Status"
+      },
+      "total_hashrate": {
+        "name": "Total Hashrate"
+      },
+      "version": {
+        "name": "Firmware Version"
       }
     },
     "switch": {
       "enable": {
         "name": "Heater"
+      },
+      "global_enable": {
+        "name": "Global Enable"
       }
     }
   }

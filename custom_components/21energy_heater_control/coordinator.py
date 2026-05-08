@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -12,7 +13,7 @@ from .api import (
     HeaterControlApiClientAuthenticationError,
     HeaterControlApiClientError,
 )
-from .const import DOMAIN, MANUFACTURER
+from .const import CONF_DEVICE_TYPE, DEVICE_TYPE_PORT, DOMAIN, MANUFACTURER
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -35,7 +36,7 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
     ):
         logger.debug("DATA UPDATE COORDINATOR INIT with data %s", entry.data)
         self.entry = entry
-        self.device = entry.data["product_id"]
+        self.device = entry.data.get("product_id") or entry.data[CONF_HOST]
         super().__init__(
             hass, logger=logger, name=name, update_interval=update_interval
         )
@@ -50,9 +51,17 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
 
     @property
     def device_info(self):
+        if self.entry.data.get(CONF_DEVICE_TYPE) == DEVICE_TYPE_PORT:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.entry.data[CONF_HOST])},
+                name=self.entry.title,
+                manufacturer=MANUFACTURER,
+                model=self.entry.data["model"],
+                sw_version=self.entry.data.get("version") or None,
+            )
         return DeviceInfo(
             identifiers={(DOMAIN, self.entry.data["product_id"])},
-            name=f"{MANUFACTURER} {self.entry.data['model']}",
+            name=self.entry.title,
             manufacturer=MANUFACTURER,
             model=self.entry.data["model"],
             sw_version=self.entry.data["version"],

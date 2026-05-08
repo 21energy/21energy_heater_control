@@ -1,6 +1,7 @@
-# switch.py (root)
-from .ofen.switch import async_setup_entry as setup_ofen_switch
+"""Switch platform for 21energy_heater_control."""
+
+from .device_registry import get_platform_setup
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    await setup_ofen_switch(hass, entry, async_add_entities)
+    await get_platform_setup(entry.data, "switch")(hass, entry, async_add_entities)

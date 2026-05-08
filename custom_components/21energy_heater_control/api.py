@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 import socket
+from abc import ABC, abstractmethod
 from typing import Any
 
 import aiohttp
@@ -56,7 +57,23 @@ def pick(primary: str, fallback: str, source: dict):
     return val
 
 
-class HeaterControlApiClient:
+class DeviceApiClientBase(ABC):
+    """Abstract base class all device API clients must implement."""
+
+    @abstractmethod
+    async def async_get_status(self) -> bool: ...
+
+    @abstractmethod
+    async def async_get_device(self) -> dict: ...
+
+    @abstractmethod
+    async def async_get_data(self) -> dict: ...
+
+    @abstractmethod
+    async def async_set_enable(self, value: bool) -> None: ...
+
+
+class HeaterControlApiClient(DeviceApiClientBase):
     """API Client."""
 
     def __init__(
@@ -376,3 +393,145 @@ class HeaterControlApiClient:
             raise HeaterControlApiClientError(
                 msg,
             ) from exception
+
+
+class PortControlApiClient(DeviceApiClientBase):
+    """API Client for 21port devices."""
+
+    def __init__(
+            self,
+            host: str,
+            session: aiohttp.ClientSession,
+    ) -> None:
+        self._host = host
+        self._session = session
+
+    async def async_get_status(self) -> bool:
+        ret = await self._api_wrapper("get", f"http://{self._host}/21port/status/summary")
+        # The summary endpoint returns PortSummaryDto — a valid dict response means the device is up
+        return isinstance(ret, dict) and "deviceCount" in ret
+
+    async def async_get_device(self) -> dict:
+        summary = await self._api_wrapper("get", f"http://{self._host}/21port/status/summary")
+        config = await self._api_wrapper("get", f"http://{self._host}/21port/status/configuration")
+        firmware = summary.get("firmwareVersion") or {}
+        return {
+            "model": "21PORT",
+            "version": firmware.get("controlVersion", ""),
+            "device_count": summary.get("deviceCount", 0),
+            "device_name": config.get("id", "21PORT"),
+        }
+
+    async def async_get_data(self) -> dict:
+        data = {}
+        # /status/summary returns the full PortSummaryDto — one call covers everything
+        summary = await self._api_wrapper("get", f"http://{self._host}/21port/status/summary")
+
+        firmware = summary.get("firmwareVersion") or {}
+        data["version"] = firmware.get("controlVersion", "")
+        data["device_count"] = int(summary.get("deviceCount", 0))
+        data["forge_status"] = summary.get("forgeStatus", "")
+        pool_status = summary.get("poolStatus")
+        data["pool_status"] = pool_status
+        data["power_level"] = summary.get("powerLevel")
+        data["power_consumption"] = summary.get("currentPowerConsumptionW")
+        total_ghs = summary.get("totalHashrateGhs")
+        data["total_hashrate"] = total_ghs / 1000.0 if total_ghs is not None else None
+        data["pool_alive"] = pool_status == "alive" if pool_status is not None else None
+        data["forge_reachable"] = data["forge_status"] in ("running", "running_no_main_loop", "paused")
+
+        devices = summary.get("devices") or []
+        for d in devices:
+            ghs = d.get("hashrateGhs")
+            d["hashrateThs"] = ghs / 1000.0 if ghs is not None else None
+        data["mining_enabled"] = any(d.get("enabled") for d in devices)
+        data["enable"] = data["mining_enabled"]
+        data["devices"] = devices
+
+        try:
+            pool_list = await self._api_wrapper("get", f"http://{self._host}/21port/mining/poolConfig")
+            data["pool_config"] = pool_list if isinstance(pool_list, list) else []
+        except Exception:
+            data["pool_config"] = []
+
+        data["status_running"] = data["forge_status"] in ("running", "running_no_main_loop")
+        return data
+
+    async def async_set_enable(self, value: bool) -> None:
+        await self._api_wrapper(
+            "post",
+            f"http://{self._host}/21port/mining/enable",
+            data={"enabled": value},
+        )
+
+    async def async_set_device_enable(self, device_id: str, value: bool) -> None:
+        await self._api_wrapper(
+            "post",
+            f"http://{self._host}/21port/mining/enable",
+            data={"enabled": value, "minerId": device_id},
+        )
+
+    async def async_set_device_power_level(self, device_id: str, value: int) -> None:
+        if not 0 <= value <= 4:
+            raise HeaterControlApiClientError(f"Power level must be 0-4, got {value}")
+        await self._api_wrapper(
+            "post",
+            f"http://{self._host}/21port/mining/powerLevel",
+            data={"level": value, "minerId": device_id},
+        )
+
+    async def async_set_powerLevel(self, value: int) -> None:
+        if not 0 <= value <= 4:
+            raise HeaterControlApiClientError(f"Power level must be 0-4, got {value}")
+        await self._api_wrapper(
+            "post",
+            f"http://{self._host}/21port/mining/powerLevel",
+            data={"level": value},
+        )
+
+    async def _api_wrapper(
+            self,
+            method: str,
+            url: str,
+            data: dict | None = None,
+            headers: dict | None = None,
+    ) -> Any:
+        """Get information from the API."""
+        request_headers = {"Host": self._host}
+        if headers:
+            request_headers.update(headers)
+        try:
+            async with asyncio.timeout(10):
+                response = await self._session.request(
+                    method=method,
+                    url=url,
+                    headers=request_headers,
+                    json=data,
+                )
+                LOGGER.debug("21port _api_wrapper => %s %s => status:%s", method.upper(), url, response.status)
+                _verify_response_or_raise(response)
+                responseType = "text"
+                if "Content-Type" in response.headers:
+                    if "application/json" in response.headers["Content-Type"]:
+                        responseType = "json"
+                if responseType == "json":
+                    try:
+                        ret = await response.json()
+                    except (ValueError, aiohttp.ContentTypeError):
+                        ret = await response.text()
+                else:
+                    ret = await response.text()
+                LOGGER.debug("21port _api_wrapper => url:%s => response:%s", url, ret)
+                return ret
+
+        except TimeoutError as exception:
+            msg = f"Timeout error fetching information - {exception}"
+            raise HeaterControlApiClientCommunicationError(msg) from exception
+        except (aiohttp.ClientError, socket.gaierror) as exception:
+            msg = f"Error fetching information - {exception}"
+            raise HeaterControlApiClientCommunicationError(msg) from exception
+        except HeaterControlApiClientError as e:
+            raise e
+        except Exception as exception:  # pylint: disable=broad-except
+            msg = f"Something really wrong happened! - {exception}"
+            raise HeaterControlApiClientError(msg) from exception

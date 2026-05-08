@@ -1,6 +1,7 @@
-# sensor.py (root)
-from .ofen.sensor import async_setup_entry as setup_ofen_sensors
+"""Sensor platform for 21energy_heater_control."""
+
+from .device_registry import get_platform_setup
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    await setup_ofen_sensors(hass, entry, async_add_entities)
+    await get_platform_setup(entry.data, "sensor")(hass, entry, async_add_entities)

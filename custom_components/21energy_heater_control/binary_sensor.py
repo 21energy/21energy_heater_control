@@ -1,6 +1,7 @@
-# binary_sensor.py (root)
-from .ofen.binary_sensor import async_setup_entry as setup_ofen_binary_sensor
+"""Binary sensor platform for 21energy_heater_control."""
+
+from .device_registry import get_platform_setup
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    await setup_ofen_binary_sensor(hass, entry, async_add_entities)
+    await get_platform_setup(entry.data, "binary_sensor")(hass, entry, async_add_entities)
