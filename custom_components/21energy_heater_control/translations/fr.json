@@ -1,0 +1,106 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "L'appareil est déjà configuré"
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion",
+      "invalid_auth": "Authentification invalide",
+      "outdated": "Il semble que votre Ofen ne soit pas à jour. Veuillez patienter quelques jours pour que l'Ofen se mette à jour. Si le problème n'est pas résolu, veuillez nous contacter.",
+      "unknown": "Erreur inattendue. Veuillez réessayer plus tard.",
+      "unpaired": "Votre appareil n'est pas appairé ! Veuillez d'abord appairer votre appareil via l'application 21energy sur votre téléphone."
+    },
+    "step": {
+      "user": {
+        "title": "Connectez votre appareil 21energy !",
+        "description": "Pour commencer, entrez l'adresse IP locale ou le nom d'hôte de votre appareil 21energy.",
+        "data": {
+          "host": "Hôte",
+          "polling_interval": "Intervalle"
+        },
+        "data_description": {
+          "host": "Le nom d'hôte ou l'adresse IP de votre appareil de chauffage.",
+          "polling_interval": "Intervalle d'interrogation en secondes"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status_running": {
+        "name": "Chauffage"
+      },
+      "connected": {
+        "name": "Connecté"
+      }
+    },
+    "number": {
+      "powertarget": {
+        "name": "Puissance cible"
+      },
+      "fanspeed": {
+        "name": "Vitesse du ventilateur"
+      }
+    },
+    "select": {
+      "fan_mode": {
+        "name": "Mode ventilateur"
+      }
+    },
+    "sensor": {
+      "status_temperature": {
+        "name": "Température"
+      },
+      "powertarget_watt": {
+        "name": "Puissance cible"
+      },
+      "power_limit": {
+        "name": "Limite de puissance"
+      },
+      "power_consumption": {
+        "name": "Consommation d'énergie"
+      },
+      "hashrate_5s": {
+        "name": "Taux de hachage 5 secondes"
+      },
+      "hashrate_1m": {
+        "name": "Taux de hachage 1 minute"
+      },
+      "hashrate_5m": {
+        "name": "Taux de hachage 5 minutes"
+      },
+      "hashrate_15m": {
+        "name": "Taux de hachage 15 minutes"
+      },
+      "hashrate_24h": {
+        "name": "Taux de hachage 24 heures"
+      },
+      "hashrate_av": {
+        "name": "Taux de hachage moyen"
+      },
+      "poolstatus": {
+        "name": "État du Pool"
+      },
+      "foundblocks": {
+        "name": "Blocs trouvés"
+      },
+      "network_name": {
+        "name": "Réseau"
+      },
+      "network_quality": {
+        "name": "Qualité du réseau"
+      },
+      "pool_1": {
+        "name": "Configuration du Pool"
+      },
+      "pool_2": {
+        "name": "Configuration du Pool de secours"
+      }
+    },
+    "switch": {
+      "enable": {
+        "name": "Chauffage"
+      }
+    }
+  }
+}
