@@ -277,15 +277,12 @@ class HeaterControlApiClient(DeviceApiClientBase):
         )
 
     async def async_get_status(self) -> bool:
-        """Get data from the API."""
-        ret = await self._api_wrapper(
+        """Check device liveness. A 200 from the status summary means operational."""
+        await self._api_wrapper(
             method="get",
-            url=f"http://{self._host}/21control/status",
+            url=f"http://{self._host}/21control/status/summary",
         )
-        LOGGER.debug("typeof ret: %s", type(ret))
-        if "operational" in ret:
-            return ret["operational"]
-        return False
+        return True
 
     async def async_get_device(self) -> Any:
         """Get heater data from the API."""
