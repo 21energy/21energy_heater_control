@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
@@ -47,7 +48,18 @@ async def async_setup_entry(
     )
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
-    await coordinator.async_config_entry_first_refresh()
+    # first_refresh logs failures at DEBUG only (log_failures=False) and raises a
+    # bare ConfigEntryNotReady whose reason lives in __cause__, so surface it here
+    # at WARNING to guarantee the actual reason is visible in the default log.
+    device = entry.data.get("product_id") or entry.data[CONF_HOST]
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryAuthFailed as err:
+        LOGGER.warning("Initial setup for %s failed - authentication rejected: %s", device, err)
+        raise
+    except ConfigEntryNotReady as err:
+        LOGGER.warning("Initial setup for %s failed - %s", device, err.__cause__ or err)
+        raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

@@ -99,19 +99,43 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._validate_and_setup()
                 LOGGER.debug("async_step_connection => info:%s", info)
             except UnpairedError:
+                LOGGER.warning(
+                    "Config flow: device at %s (%s) is not paired",
+                    self._host, self._device_type,
+                )
                 errors["base"] = "unpaired"
             except WrongDeviceType:
+                LOGGER.warning(
+                    "Config flow: device at %s is not the selected type %s",
+                    self._host, self._device_type,
+                )
                 errors["base"] = "wrong_device_type"
-            except (CannotConnect, HeaterControlApiClientCommunicationError):
+            except (CannotConnect, HeaterControlApiClientCommunicationError) as e:
+                LOGGER.warning(
+                    "Config flow: cannot connect to %s (%s): %s",
+                    self._host, self._device_type, e,
+                )
                 errors["base"] = "cannot_connect"
-            except InvalidHost:
-                errors["host"] = "cannot_connect"
+            except InvalidHost as e:
+                LOGGER.warning("Config flow: invalid host %r: %s", self._host, e)
+                errors["host"] = "invalid_host"
             except HeaterControlApiClientOutdatedError:
+                LOGGER.warning(
+                    "Config flow: %s (%s) returned 404 - endpoint missing, firmware likely outdated",
+                    self._host, self._device_type,
+                )
                 errors["base"] = "outdated"
             except HeaterControlApiClientAuthenticationError:
+                LOGGER.warning(
+                    "Config flow: authentication rejected by %s (%s)",
+                    self._host, self._device_type,
+                )
                 errors["base"] = "invalid_auth"
             except Exception as e:
-                LOGGER.exception("Unexpected exception: %s", e)
+                LOGGER.exception(
+                    "Config flow: unexpected error connecting to %s (%s): %s",
+                    self._host, self._device_type, e,
+                )
                 errors["base"] = "unknown"
             else:
                 # Network calls succeeded — flow management outside try/except
@@ -159,6 +183,10 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._device_type == DEVICE_TYPE_PORT:
             if device.get("model") != "21PORT":
+                LOGGER.warning(
+                    "Expected a 21PORT at %s but device reports model %r",
+                    self._host, device.get("model"),
+                )
                 raise WrongDeviceType
             assert isinstance(client, PortControlApiClient)
             return {
@@ -174,6 +202,10 @@ class HeaterControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not device.get("is_paired"):
                 raise UnpairedError
             if not device.get("product_id"):
+                LOGGER.error(
+                    "Device at %s responded but returned no product_id: %s",
+                    self._host, device,
+                )
                 raise CannotConnect
             pool_config = await client.async_get_poolConfig()
             device[CONF_DEVICE_TYPE] = DEVICE_TYPE_OFEN

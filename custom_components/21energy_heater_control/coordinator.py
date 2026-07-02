@@ -78,6 +78,11 @@ class HeaterControlDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.entry.runtime_data.client.async_get_data()
         except HeaterControlApiClientAuthenticationError as exception:
+            self.logger.warning(
+                "Authentication failed for %s, requesting reauth: %s",
+                self.device, exception,
+            )
             raise ConfigEntryAuthFailed(exception) from exception
         except HeaterControlApiClientError as exception:
+            self.logger.debug("Update failed for %s: %s", self.device, exception)
             raise UpdateFailed(exception) from exception

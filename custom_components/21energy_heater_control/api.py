@@ -374,18 +374,22 @@ class HeaterControlApiClient(DeviceApiClientBase):
                 return ret
 
         except TimeoutError as exception:
+            LOGGER.debug("Timeout on %s %s: %s", method.upper(), url, exception)
             msg = f"Timeout error fetching information - {exception}"
             raise HeaterControlApiClientCommunicationError(
                 msg,
             ) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
+            LOGGER.debug("Connection error on %s %s: %s", method.upper(), url, exception)
             msg = f"Error fetching information - {exception}"
             raise HeaterControlApiClientCommunicationError(
                 msg,
             ) from exception
-        except HeaterControlApiClientError as e:
-            raise e
+        except HeaterControlApiClientError as exception:
+            LOGGER.debug("API error on %s %s: %s", method.upper(), url, exception)
+            raise
         except Exception as exception:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected error on %s %s", method.upper(), url)
             msg = f"Something really wrong happened! - {exception}"
             raise HeaterControlApiClientError(
                 msg,
@@ -448,7 +452,8 @@ class PortControlApiClient(DeviceApiClientBase):
         try:
             pool_list = await self._api_wrapper("get", f"http://{self._host}/21port/mining/poolConfig")
             data["pool_config"] = pool_list if isinstance(pool_list, list) else []
-        except Exception:
+        except Exception as exception:
+            LOGGER.debug("21port poolConfig fetch failed, defaulting to []: %s", exception)
             data["pool_config"] = []
 
         data["status_running"] = data["forge_status"] in ("running", "running_no_main_loop")
@@ -522,13 +527,17 @@ class PortControlApiClient(DeviceApiClientBase):
                 return ret
 
         except TimeoutError as exception:
+            LOGGER.debug("21port timeout on %s %s: %s", method.upper(), url, exception)
             msg = f"Timeout error fetching information - {exception}"
             raise HeaterControlApiClientCommunicationError(msg) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
+            LOGGER.debug("21port connection error on %s %s: %s", method.upper(), url, exception)
             msg = f"Error fetching information - {exception}"
             raise HeaterControlApiClientCommunicationError(msg) from exception
-        except HeaterControlApiClientError as e:
-            raise e
+        except HeaterControlApiClientError as exception:
+            LOGGER.debug("21port API error on %s %s: %s", method.upper(), url, exception)
+            raise
         except Exception as exception:  # pylint: disable=broad-except
+            LOGGER.exception("21port unexpected error on %s %s", method.upper(), url)
             msg = f"Something really wrong happened! - {exception}"
             raise HeaterControlApiClientError(msg) from exception
