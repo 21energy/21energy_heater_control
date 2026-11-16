@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING, Literal
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import UnitOfPower, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfPower, UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later
 
-from ..const import DOMAIN, LOGGER, STATE_OFF, STATE_ON
-from ..entity import HeaterControlEntity
+from ..const import LOGGER, STATE_OFF, STATE_ON
+from ..entity import HeaterControlEntity, build_entity_id
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,11 +27,6 @@ DEVICE_REMOVAL_DELAY = 60  # seconds
 def _get_device(coordinator: HeaterControlDataUpdateCoordinator, device_id: str) -> dict | None:
     devices = (coordinator.data or {}).get("devices") or []
     return next((d for d in devices if d["id"] == device_id), None)
-
-
-def _safe_entity_id(device_id: str) -> str:
-    """Sanitize device_id for use in entity_id (replace dots with underscores)."""
-    return device_id.replace(".", "_")
 
 
 class PortDeviceSensor(HeaterControlEntity, SensorEntity):
@@ -53,7 +48,7 @@ class PortDeviceSensor(HeaterControlEntity, SensorEntity):
         self._key = key
         self._attr_name = f"{device['model']} {label}"
         self._attr_unique_id = f"{coordinator.device}_{device['id']}_{key}"
-        self.entity_id = f"{DOMAIN}.{coordinator.device}_{_safe_entity_id(device['id'])}_{key}"
+        self.entity_id = build_entity_id(Platform.SENSOR, coordinator.device, device["id"], key)
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
@@ -87,7 +82,7 @@ class PortDeviceSwitch(HeaterControlEntity, SwitchEntity):
         self._device_id = device["id"]
         self._attr_name = f"{device['model']} Enabled"
         self._attr_unique_id = f"{coordinator.device}_{device['id']}_enabled"
-        self.entity_id = f"{DOMAIN}.{coordinator.device}_{_safe_entity_id(device['id'])}_enabled"
+        self.entity_id = build_entity_id(Platform.SWITCH, coordinator.device, device["id"], "enabled")
         self._attr_icon = "mdi:pickaxe"
 
     @property
@@ -138,7 +133,7 @@ class PortDeviceNumber(HeaterControlEntity, NumberEntity):
         self._device_id = device["id"]
         self._attr_name = f"{device['model']} Power Level"
         self._attr_unique_id = f"{coordinator.device}_{device['id']}_power_level"
-        self.entity_id = f"{DOMAIN}.{coordinator.device}_{_safe_entity_id(device['id'])}_power_level"
+        self.entity_id = build_entity_id(Platform.NUMBER, coordinator.device, device["id"], "power_level")
         self._attr_icon = "mdi:lightning-bolt"
         self._attr_native_min_value = 1
         self._attr_native_max_value = 5

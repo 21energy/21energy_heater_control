@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from homeassistant.const import Platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .coordinator import HeaterControlDataUpdateCoordinator
+
+
+# Must match entity_ids already stored in users' entity registries.
+def build_entity_id(platform: Platform, *parts: str) -> str:
+    return f"{platform}.{slugify('_'.join(parts))}"
 
 
 class HeaterControlEntity(CoordinatorEntity[HeaterControlDataUpdateCoordinator]):

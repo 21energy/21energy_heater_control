@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import Platform
 
-from ..const import DOMAIN, STATE_OFF, STATE_ON
-from ..entity import HeaterControlEntity
+from ..const import STATE_OFF, STATE_ON
+from ..entity import HeaterControlEntity, build_entity_id
 from ..ofen.switch import ExtSwitchEntityDescription
 
 if TYPE_CHECKING:
@@ -57,7 +58,7 @@ class PortSwitch(HeaterControlEntity, SwitchEntity):
         self.entity_description = entity_description
         self._attr_translation_key = "global_enable"
         self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self.entity_id = build_entity_id(Platform.SWITCH, self.coordinator.device, self.entity_description.key)
 
     async def async_turn_on(self, **kwargs):
         await self.coordinator.async_set_device_enable(self.entity_description.key, True)

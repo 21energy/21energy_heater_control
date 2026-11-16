@@ -9,9 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import Platform
 
-from ..const import DOMAIN
-from ..entity import HeaterControlEntity
+from ..entity import HeaterControlEntity, build_entity_id
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ class PortBinarySensor(HeaterControlEntity, BinarySensorEntity):
         self.entity_description = entity_description
         self._attr_translation_key = self.entity_description.key
         self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self.entity_id = build_entity_id(Platform.BINARY_SENSOR, self.coordinator.device, self.entity_description.key)
 
     @property
     def is_on(self) -> bool | None:

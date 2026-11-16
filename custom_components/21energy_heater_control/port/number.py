@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode
+from homeassistant.const import Platform
 
-from ..const import DOMAIN, LOGGER
-from ..entity import HeaterControlEntity
+from ..const import LOGGER
+from ..entity import HeaterControlEntity, build_entity_id
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -60,7 +61,7 @@ class PortNumber(HeaterControlEntity, NumberEntity):
         self.entity_description = entity_description
         self._attr_translation_key = "global_power_level"
         self._attr_unique_id = f"{self.coordinator.device}_{self.entity_description.key}"
-        self.entity_id = f"{DOMAIN}.{self.coordinator.device}.{self.entity_description.key}"
+        self.entity_id = build_entity_id(Platform.NUMBER, self.coordinator.device, self.entity_description.key)
 
     @property
     def native_value(self) -> float | None:
