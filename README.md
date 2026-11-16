@@ -11,9 +11,9 @@ fully locally and does not rely on external 21energy infrastructure.
 
 | Platform        | Description                        |
 |-----------------|------------------------------------|
-| `binary_sensor` | Show connected and Heater running. |
-| `sensor`        | Show info from Heater.             |
-| `switch`        | Switch the Heater on / off.        |
+| `binary_sensor` | Show connected and device running. |
+| `sensor`        | Show info from device.             |
+| `switch`        | Switch the device on / off.        |
 | `number`        | Select power level.                |
 
 ## Automation Blueprints
